@@ -1,0 +1,22 @@
+{
+  "name": "lighthouse-analyser",
+  "version": "1.0.0",
+  "description": "Analyse pages with Lighthouse",
+  "main": "index.js",
+  "scripts": {
+    "start": "ts-node ./lighthouse/analyse.ts"
+  },
+  "author": "Alecsandro Bez Stolk",
+  "license": "",
+  "devDependencies": {
+    "install": "^0.13.0",
+    "npm": "^7.15.1",
+    "ts-node": "^10.0.0",
+    "tslint": "^5.12.1",
+    "typescript": "^3.3.3"
+  },
+  "dependencies": {
+    "chrome-launcher": "^0.14.0",
+    "lighthouse": "^8.0.0"
+  }
+}
