@@ -3,15 +3,17 @@ import urlsContent from "../resources/urls.json";
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { launch } from "chrome-launcher";
+import { Reporter } from "./reporter";
+const output: string = 'json'
 
 export class LightHouseWrapper {
   private folderName = new Date().toISOString();
   private reportsDirectory = join(process.cwd(), 'reports');
-  private reportFolder = join(this.reportsDirectory, this.folderName);
+  private reportFolderResults = join(this.reportsDirectory, this.folderName, output);
   private chrome: any;
   private options = {
-    logLevel: "info",
-    output: "html",
+    logLevel: 'info',
+    output: output,
     formFactor: 'desktop',
     screenEmulation: {width: 1920, height: 1080, mobile: false, disabled: false}
   }
@@ -38,7 +40,8 @@ export class LightHouseWrapper {
   async createReportDirectory(): Promise<void> {
     try {
       if (!existsSync(this.reportsDirectory)) mkdirSync(this.reportsDirectory);
-      if (!existsSync(`${this.reportFolder}`)) mkdirSync(`${this.reportFolder}`);
+      if (!existsSync(`${this.reportsDirectory}/${this.folderName}`)) mkdirSync(`${this.reportsDirectory}/${this.folderName}`);
+      if (!existsSync(`${this.reportFolderResults}`)) mkdirSync(`${this.reportFolderResults}`);
     } catch (err) {
       console.error(err);
     }
@@ -46,11 +49,12 @@ export class LightHouseWrapper {
 
   async generateReport(result: any, name: string): Promise<void> {
     let reportHtml = await result.report;
-    writeFileSync(`${this.reportFolder}/${name}.html`, reportHtml);
+    writeFileSync(`${this.reportFolderResults}/${name}.${output}`, reportHtml);
   }
 
   async teardown(): Promise<void> {
     await this.chrome.kill();
+    await Reporter.generateReport(this.folderName).catch(err => console.error(err));
   }
 
 }
