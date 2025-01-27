@@ -4,7 +4,8 @@
   "description": "Analyse pages with Lighthouse",
   "main": "index.js",
   "scripts": {
-    "start": "ts-node ./lighthouse/analyse.ts"
+    "start": "ts-node ./lighthouse/analyse.ts",
+    "script": "ts-node ./script.ts"
   },
   "author": "Alecsandro Bez Stolk",
   "license": "",

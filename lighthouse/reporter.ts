@@ -4,6 +4,12 @@ import { writeFile } from 'fs/promises';
 import ReportGenerator from 'lighthouse/report/generator/report-generator';
 
 export class Reporter {
+
+    static extractSize(size: string): string {
+        // Regex para capturar o número no formato correto
+        const match = size.match(/([\d,.]+)/);
+        return match ? match[1].replace(',', '.') : 'N/A'; // Substitui vírgulas por pontos
+    }
     
     static async generateReport(folderName: string): Promise<void> {
         const REPORTS_DIR = `./reports/${folderName}`
@@ -27,8 +33,8 @@ export class Reporter {
             const accessibility = Math.round((jsonData.categories.accessibility.score || 0) * 100);
             const bestPractices = Math.round((jsonData.categories['best-practices'].score || 0) * 100);
             const seo = Math.round((jsonData.categories.seo.score || 0) * 100);
-            const pageSize = jsonData.audits['total-byte-weight'].displayValue || 'N/A';
-            const loadTime = jsonData.audits['interactive'].displayValue || 'N/A';
+            const pageSize = ((jsonData.audits['total-byte-weight'].numericValue / 1024) / 1000 || 0).toFixed(3);
+            const loadTime = (jsonData.audits['interactive'].numericValue / 1000 || 0).toFixed(1);
 
             summaries.push({
                 fileName: path.basename(htmlPath), // Nome do arquivo HTML
@@ -59,61 +65,50 @@ export class Reporter {
     static generateIndexHTML(summaries: any[]) {
         return `
         <!DOCTYPE html>
-        <html lang="en">
-        <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Relatório Lighthouse</title>
-        <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            table { width: 100%; border-collapse: collapse; }
-            th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
-            th { background-color: #f4f4f4; }
-            tr:nth-child(even) { background-color: #f9f9f9; }
-            .good { color: green; }
-            .average { color: orange; }
-            .poor { color: red; }
-
-            /* Adicionando o alinhamento à direita para os números */
-            td, th {
-                text-align: left; /* Para garantir que o texto esteja alinhado à esquerda por padrão */
-            }
-
-            .numeric {
-                text-align: right; /* Alinha números à direita */
-            }
-        </style>
-        </head>
-        <body>
-        <h1>Relatório Lighthouse</h1>
-        <table>
-            <thead>
-            <tr>
-                <th>Página</th>
-                <th>Performance</th>
-                <th>Acessibilidade</th>
-                <th>Melhores práticas</th>
-                <th>SEO</th>
-                <th>Tamanho</th>
-                <th>Tempo de Carregamento</th>
-            </tr>
-            </thead>
-            <tbody>
-            ${summaries.map(summary => `
-                <tr>
-                <td><a href="html/${summary.fileName}">${summary.fileName}</a></td>
-                <td class="numeric ${this.getScoreClass(summary.performance)}">${summary.performance}</td>
-                <td class="numeric ${this.getScoreClass(summary.accessibility)}">${summary.accessibility}</td>
-                <td class="numeric ${this.getScoreClass(summary.bestPractices)}">${summary.bestPractices}</td>
-                <td class="numeric ${this.getScoreClass(summary.seo)}">${summary.seo}</td>
-                <td>${summary.pageSize}</td>
-                <td>${summary.loadTime}</td>
-                </tr>
-            `).join('')}
-            </tbody>
-        </table>
-        </body>
-        </html>
+            <html lang="en">
+            <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Performance Report</title>
+            <link rel="stylesheet" href="../../lighthouse/style.css">
+            </head>
+            <body>
+            <header>
+                Relatório Lighthouse
+            </header>
+            <main>
+                <table>
+                <thead>
+                    <tr>
+                    <th>Página</th>
+                    <th>Performance</th>
+                    <th>Acessibilidade</th>
+                    <th>Melhores práticas</th>
+                    <th>SEO</th>
+                    <th>Tamanho (KiB)</th>
+                    <th>Tempo (segundos)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${summaries.map(summary => `
+                    <tr>
+                    <td><a href="html/${summary.fileName}">${summary.fileName}</a></td>
+                    <td class="numeric ${this.getScoreClass(summary.performance)}">${summary.performance}</td>
+                    <td class="numeric ${this.getScoreClass(summary.accessibility)}">${summary.accessibility}</td>
+                    <td class="numeric ${this.getScoreClass(summary.bestPractices)}">${summary.bestPractices}</td>
+                    <td class="numeric ${this.getScoreClass(summary.seo)}">${summary.seo}</td>
+                    <td class="numeric">${summary.pageSize}</td>
+                    <td class="numeric">${summary.loadTime}</td>
+                    </tr>
+                `).join('')}
+                </tbody>
+                </table>
+            </main>
+            <footer>
+                © 2025 by Alecsandro - Powered by Lighthouse
+            </footer>
+            </body>
+            </html>
         `;
     }
 
